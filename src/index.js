@@ -3,6 +3,7 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJSDoc = require('swagger-jsdoc');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -22,7 +23,7 @@ const swaggerDefinition = {
     description: 'API REST para consultar la Biblia católica en español (Biblia de Jerusalén 1976). Incluye 73 libros, 1189 capítulos y más de 33,000 versículos.'
   },
   servers: [
-    { url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000', description: 'Servidor actual' }
+    { url: '/', description: 'Servidor actual' }
   ],
   tags: [
     { name: 'Libros', description: 'Operaciones sobre libros de la Biblia' },
@@ -34,7 +35,7 @@ const swaggerDefinition = {
 
 const options = {
   swaggerDefinition,
-  apis: ['./src/routes/*.js']
+  apis: [path.join(__dirname, 'routes', '*.js')]
 };
 const swaggerSpec = swaggerJSDoc(options);
 
@@ -42,8 +43,16 @@ const swaggerSpec = swaggerJSDoc(options);
 const bibleRoutes = require('./routes/bible')(pool);
 app.use('/api', bibleRoutes);
 
+// Endpoint para obtener la especificación Swagger en JSON
+app.get('/api-docs.json', (req, res) => {
+  res.json(swaggerSpec);
+});
+
 // Swagger UI en la raíz
-app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: true,
+  customSiteTitle: 'API Biblia Católica - Documentación'
+}));
 
 // Solo inicia el servidor si no está en Vercel
 if (!process.env.VERCEL) {
