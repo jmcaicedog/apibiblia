@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const swaggerUi = require('swagger-ui-express');
 const { Pool } = require('pg');
 
 const app = express();
@@ -151,10 +150,39 @@ const swaggerSpec = {
 const bibleRoutes = require('./routes/bible')(pool);
 app.use('/api', bibleRoutes);
 
-// Swagger UI en la raíz
-app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customSiteTitle: 'API Biblia Católica - Documentación'
-}));
+// Endpoint para la especificación OpenAPI en JSON
+app.get('/openapi.json', (req, res) => {
+  res.json(swaggerSpec);
+});
+
+// Swagger UI usando CDN (funciona en Vercel)
+app.get('/', (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Biblia Católica - Documentación</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = function() {
+      SwaggerUIBundle({
+        url: '/openapi.json',
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+        layout: "BaseLayout"
+      });
+    };
+  </script>
+</body>
+</html>
+  `);
+});
 
 // Solo inicia el servidor si no está en Vercel
 if (!process.env.VERCEL) {
