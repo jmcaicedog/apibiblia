@@ -31,6 +31,9 @@ const swaggerSpec = {
       get: {
         summary: 'Obtener todos los libros de la Biblia',
         tags: ['Libros'],
+        parameters: [
+          { name: 'testamento', in: 'query', schema: { type: 'string', enum: ['AT', 'NT'] }, description: 'Filtrar por testamento (AT = Antiguo, NT = Nuevo)' }
+        ],
         responses: {
           200: {
             description: 'Lista de libros',
@@ -42,13 +45,32 @@ const swaggerSpec = {
                     type: 'object',
                     properties: {
                       id: { type: 'integer' },
-                      nombre: { type: 'string' }
+                      nombre: { type: 'string' },
+                      testamento: { type: 'string', description: 'AT o NT' }
                     }
                   }
                 }
               }
             }
           }
+        }
+      }
+    },
+    '/api/antiguo-testamento': {
+      get: {
+        summary: 'Obtener todos los libros del Antiguo Testamento',
+        tags: ['Libros'],
+        responses: {
+          200: { description: 'Lista de 46 libros del Antiguo Testamento' }
+        }
+      }
+    },
+    '/api/nuevo-testamento': {
+      get: {
+        summary: 'Obtener todos los libros del Nuevo Testamento',
+        tags: ['Libros'],
+        responses: {
+          200: { description: 'Lista de 27 libros del Nuevo Testamento' }
         }
       }
     },

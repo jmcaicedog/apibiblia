@@ -8,6 +8,13 @@ module.exports = (pool) => {
    *   get:
    *     summary: Obtener todos los libros de la Biblia
    *     tags: [Libros]
+   *     parameters:
+   *       - in: query
+   *         name: testamento
+   *         schema:
+   *           type: string
+   *           enum: [AT, NT]
+   *         description: Filtrar por testamento (AT = Antiguo, NT = Nuevo)
    *     responses:
    *       200:
    *         description: Lista de libros
@@ -22,10 +29,46 @@ module.exports = (pool) => {
    *                     type: integer
    *                   nombre:
    *                     type: string
+   *                   testamento:
+   *                     type: string
    */
   router.get('/libros', async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM libros ORDER BY id');
+      const { testamento } = req.query;
+      let query = 'SELECT * FROM libros';
+      let params = [];
+      
+      if (testamento && ['AT', 'NT'].includes(testamento.toUpperCase())) {
+        query += ' WHERE testamento = $1';
+        params.push(testamento.toUpperCase());
+      }
+      
+      query += ' ORDER BY id';
+      const result = await pool.query(query, params);
+      res.json(result.rows);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Obtener libros del Antiguo Testamento
+   */
+  router.get('/antiguo-testamento', async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM libros WHERE testamento = $1 ORDER BY id', ['AT']);
+      res.json(result.rows);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * Obtener libros del Nuevo Testamento
+   */
+  router.get('/nuevo-testamento', async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM libros WHERE testamento = $1 ORDER BY id', ['NT']);
       res.json(result.rows);
     } catch (err) {
       res.status(500).json({ error: err.message });
